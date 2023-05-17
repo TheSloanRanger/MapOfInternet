@@ -54,7 +54,7 @@ def scrape(url):
             string = string.replace('&', 'and')
             string = string.replace('\n', '')
             
-            out = open("C:\\Users\\mrben\\Documents\\MOI\\" + new_url + ".md", 'a', encoding='windows-1252')
+            out = open("C:\\Users\\mrben\\Desktop\\MapOfInternet\\" + new_url + ".md", 'a', encoding='windows-1252')
             out.write("[[" + string.replace('/', '-') + "]]\n")
             out.close()
 
@@ -87,7 +87,7 @@ def scrape(url):
             string = string.replace('\n', '')
             
             
-            out = open("C:\\Users\\mrben\\Documents\\MOI\\" + new_url + ".md", 'a', encoding='windows-1252')
+            out = open("C:\\Users\\mrben\\Desktop\\MapOfInternet\\" + new_url + ".md", 'a', encoding='windows-1252')
             out.write("[[" + string.replace('/', '-') + "]]\n")
             out.close()
 

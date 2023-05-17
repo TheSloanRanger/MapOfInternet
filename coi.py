@@ -1,14 +1,21 @@
 
 import os
+import time
 
 scraped = list()
 
 def scrape(url):
 
+    
+
+    time.sleep(2)
     global depth
+
+    if depth > maxDepth:
+        return
     
     depth = depth + 1
-    print("depth: ", depth)
+    print("depth: ", depth, " scraping: ", url)
 
     scraped.append(url)
 
@@ -46,18 +53,18 @@ def scrape(url):
             new_string = new_string.replace('&', 'and')
             new_string = new_string.replace('\n', '')
             
-            out = open("C:\\Users\\mrben\\Documents\\MOI\\" + new_url + ".md", 'a', encoding='windows-1252')
+            out = open("C:\\Users\\mrben\\Desktop\\MapOfInternet\\" + new_url + ".md", 'a', encoding='windows-1252')
             out.write("[[" + new_string.replace('/', '-') + "]]\n")
             out.close()
 
-            if string not in scraped and depth <= 1:
+            if string not in scraped:
                 scrape(string) # recursively follow link
 
             
 
                 
         
-        if "href=\"https" in line:
+        elif "href=\"https" in line:
             position = line.find("href=\"https")
             string = ''
             for i in range(position+6, len(line)):
@@ -80,14 +87,14 @@ def scrape(url):
             new_string = new_string.replace('\n', '')
             
             
-            out = open("C:\\Users\\mrben\\Documents\\MOI\\" + new_url + ".md", 'a', encoding='windows-1252')
+            out = open("C:\\Users\\mrben\\Desktop\\MapOfInternet\\" + new_url + ".md", 'a', encoding='windows-1252')
             out.write("[[" + new_string.replace('/', '-') + "]]\n")
             out.close()
 
-            if string not in scraped and depth <= 1:
+            if string not in scraped:
                 scrape(string) # recursively follow link
 
-    depth = 0
+    depth = depth - 1
 
             
 
@@ -95,9 +102,10 @@ url_list = open('urls.txt', 'r', encoding='windows-1252')
 
 u = url_list.readline()
 
+maxDepth = 3 # specify the max recursive depth scrape, in python default max recursion depth should be 100
 depth = 0
 
-scrape("https:/www.facebook.com")
+scrape("https://www.youtube.com")
 
     
 
