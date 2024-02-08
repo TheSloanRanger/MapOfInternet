@@ -1,117 +1,116 @@
-from numpy import unicode_
 import requests
-import subprocess
-import random
-import os
 
-scraped = list()
+scraped_urls = set()
 
 
+def scrape(
+    url,
+    depth_limit,
+    depth=0,
+):
 
-def scrape(url):
+    print(f"Scraping {url} at depth {depth}")
 
-    global depth
-    
-    depth = depth + 1
-    print(depth)
-    
-    scraped.append(url)
+    scraped_urls.add(url)
 
-    os.system('curl \"' + url + '\" -o moi.txt')
+    try:
+        response = requests.get(url)
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to fetch {url}. Error: {e}")
+        return
 
-    moi = open('moi.txt', 'r', errors="ignore")
+    if response.status_code != 200:
+        print(f"Failed to fetch {url}. Status code: {response.status_code}")
+        return
 
-    text = moi.read()
-
-    text = text.split('>')
-
-
+    text = response.text.split(">")
 
     for line in text:
-        if "HREF=\"https" in line:
-            print("Link Found!")
-            position = line.find("HREF=\"https")
-            string = ''
-            for i in range(position+6, len(line)):
-                if line[i] == '\"':
+        if 'href="https' in line or 'HREF="https' in line:
+            if 'href="https' in line:
+                position = line.find('href="https')
+            else:
+                position = line.find('HREF="https')
+
+            string = ""
+            for i in range(position + 6, len(line)):
+                if line[i] == '"':
                     break
-                string = string + line[i]
-            print(string)
-            
+                string += line[i]
 
-            new_url = url.replace('/', '-')
-            new_url = new_url.replace(':', '=')
-            new_url = new_url.replace('?', '')
-            new_url = new_url.replace('&', 'and')
+            new_url = (
+                url.replace("/", "-")
+                .replace(":", "=")
+                .replace("?", "")
+                .replace("&", "and")
+            )
 
-            # if string not in scraped and depth < 8:
-            #     scrape(string) # recursively follow link
-                
+            output_path = f"/home/ben/Code/MapOfInternet/Websites/{new_url}.md"
+            with open(output_path, "a", encoding="utf-8") as out:
+                out.write(f"[[{string.replace('/', '-')}]]\n")
 
-            string = string.replace(':', '=')
+            if string not in scraped_urls and depth < depth_limit:
+                scrape(string, depth_limit, depth + 1)
 
-            string = string.replace('?', '')
-            string = string.replace('&', 'and')
-            string = string.replace('\n', '')
-            
-            out = open("C:\\Users\\mrben\\Desktop\\MapOfInternet\\" + new_url + ".md", 'a', encoding='windows-1252')
-            out.write("[[" + string.replace('/', '-') + "]]\n")
-            out.close()
-
-            
-
-                
-        
-        if "href=\"https" in line:
-            position = line.find("href=\"https")
-            string = ''
-            for i in range(position+6, len(line)):
-                if line[i] == '\"':
-                    break
-                string = string + line[i]
-            print(string)
-
-            new_url = url.replace('/', '-')
-            new_url = new_url.replace(':', '=')
-            new_url = new_url.replace('?', '')
-            new_url = new_url.replace('&', 'and')
-
-            # if string not in scraped and depth < 8:
-            #     scrape(string) # recursively follow link
+    print("FINISHED SCRAPING: ", url)
 
 
-            string = string.replace(':', '=')
+def main():
 
-            string = string.replace('?', '')
-            string = string.replace('&', 'and')
-            string = string.replace('\n', '')
-            
-            
-            out = open("C:\\Users\\mrben\\Desktop\\MapOfInternet\\" + new_url + ".md", 'a', encoding='windows-1252')
-            out.write("[[" + string.replace('/', '-') + "]]\n")
-            out.close()
+    while True:
+        print("Welcome to the Map of Internet program.")
+        print()
+        print(
+            "This program uses a list of the most popular websites, and scrapes them recursively to create a map of the internet. Or you can enter a single origin website to recursively scrape from."
+        )
+        print()
+        print("1) Scrape from a list of popular websites")
+        print("2) Scrape from a single origin website")
+        print()
+        choice = input("Please enter your choice (1 or 2): ")
 
-    depth = 1
+        if choice not in ("1", "2"):
+            print("Invalid choice.")
+            # clear the console
+            print(chr(27) + "[2J")
+            continue
 
-            
+        if choice == "1":
+            list_scrape()
 
-
-
-url_list = open('urls.txt', 'r', encoding='windows-1252')
-
-u = url_list.readline()
-
-depth = 1
-
-while u:
-    scrape('https://www.' + u.replace('\n', ''))
-    u = url_list.readline()
-
+        if choice == "2":
+            single_scrape()
 
 
+def list_scrape():
+    depth = input(
+        "How many levels deep would you like to scrape? (default 1, max 100): "
+    )
 
-    
+    if not depth:
+        depth = 1
 
-# scrape('https://www.youtube.com')
-# scrape("https://www.twitch.tv")
-        
+    with open("urls.txt", "r", encoding="utf-8") as url_list:
+        for url in url_list:
+            url = url.strip()
+            scrape(f"https://www.{url}", depth_limit=int(depth))
+
+
+def single_scrape():
+    url = input("Please enter the URL to scrape (include https://): ")
+    if not url or "https://" not in url:
+        print("Invalid URL.")
+        return
+
+    depth = input(
+        "How many levels deep would you like to scrape? (default 1, max 100): "
+    )
+
+    if not depth:
+        depth = 1
+
+    scrape(url, depth_limit=int(depth))
+
+
+if __name__ == "__main__":
+    main()
